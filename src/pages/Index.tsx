@@ -137,9 +137,9 @@ const Index = () => {
               <h1 className="text-3xl font-bold text-foreground">NEWS PORTAL</h1>
             </div>
             <nav className="hidden md:flex items-center gap-6">
-              <a href="#" className="text-sm font-medium hover:text-primary transition-colors">Главная</a>
-              <a href="#" className="text-sm font-medium hover:text-primary transition-colors">О нас</a>
-              <a href="#" className="text-sm font-medium hover:text-primary transition-colors">Контакты</a>
+              <a onClick={() => navigate("/")} className="text-sm font-medium text-primary transition-colors cursor-pointer">Главная</a>
+              <a onClick={() => navigate("/about")} className="text-sm font-medium hover:text-primary transition-colors cursor-pointer">О нас</a>
+              <a onClick={() => navigate("/contacts")} className="text-sm font-medium hover:text-primary transition-colors cursor-pointer">Контакты</a>
             </nav>
           </div>
           
@@ -298,10 +298,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">О нас</h4>
               <ul className="space-y-2 text-sm opacity-80">
-                <li><a href="#" className="hover:text-primary transition-colors">О проекте</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Редакция</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Контакты</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Реклама</a></li>
+                <li><a onClick={() => navigate("/about")} className="hover:text-primary transition-colors cursor-pointer">О проекте</a></li>
+                <li><a onClick={() => navigate("/about")} className="hover:text-primary transition-colors cursor-pointer">Редакция</a></li>
+                <li><a onClick={() => navigate("/contacts")} className="hover:text-primary transition-colors cursor-pointer">Контакты</a></li>
+                <li><a onClick={() => navigate("/contacts")} className="hover:text-primary transition-colors cursor-pointer">Реклама</a></li>
               </ul>
             </div>
             
