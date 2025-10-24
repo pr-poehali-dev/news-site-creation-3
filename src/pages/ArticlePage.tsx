@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/icon";
 
 interface ArticleData {
@@ -133,11 +137,83 @@ const articlesData: Record<number, ArticleData> = {
   }
 };
 
+interface Comment {
+  id: number;
+  author: string;
+  text: string;
+  date: string;
+  likes: number;
+}
+
 const ArticlePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const articleId = parseInt(searchParams.get("id") || "1");
   const article = articlesData[articleId];
+  
+  const [comments, setComments] = useState<Comment[]>([
+    { id: 1, author: "Иван Сидоров", text: "Отличная статья! Очень актуальная тема.", date: "2 часа назад", likes: 12 },
+    { id: 2, author: "Анна Петрова", text: "Спасибо за подробный разбор. Узнала много нового.", date: "5 часов назад", likes: 8 },
+    { id: 3, author: "Михаил Козлов", text: "Интересный взгляд на проблему. Жду продолжения!", date: "1 день назад", likes: 15 }
+  ]);
+  const [newComment, setNewComment] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
+  
+  const handleShare = (platform: string) => {
+    const url = window.location.href;
+    const text = article.title;
+    
+    let shareUrl = "";
+    switch(platform) {
+      case "vk":
+        shareUrl = `https://vk.com/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`;
+        break;
+      case "telegram":
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+        break;
+      case "whatsapp":
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+        break;
+      case "twitter":
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+        break;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, "_blank", "width=600,height=400");
+      toast({
+        title: "Поделиться статьей",
+        description: "Окно публикации открыто в новой вкладке"
+      });
+    }
+  };
+  
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      const comment: Comment = {
+        id: comments.length + 1,
+        author: "Вы",
+        text: newComment,
+        date: "Только что",
+        likes: 0
+      };
+      setComments([comment, ...comments]);
+      setNewComment("");
+      toast({
+        title: "Комментарий добавлен",
+        description: "Ваш комментарий успешно опубликован"
+      });
+    }
+  };
+  
+  const handleSave = () => {
+    setIsSaved(!isSaved);
+    toast({
+      title: isSaved ? "Удалено из сохраненных" : "Сохранено",
+      description: isSaved ? "Статья удалена из избранного" : "Статья добавлена в избранное"
+    });
+  };
 
   if (!article) {
     return (
@@ -211,15 +287,87 @@ const ArticlePage = () => {
           ))}
         </div>
 
-        <div className="flex gap-3 mt-12 mb-12">
-          <Button variant="outline" className="gap-2">
-            <Icon name="Share2" size={18} />
-            Поделиться
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Icon name="Bookmark" size={18} />
-            Сохранить
-          </Button>
+        <div className="mt-12 mb-12">
+          <div className="flex flex-wrap gap-3 mb-6">
+            <Button 
+              variant={isSaved ? "default" : "outline"} 
+              className="gap-2"
+              onClick={handleSave}
+            >
+              <Icon name="Bookmark" size={18} />
+              {isSaved ? "Сохранено" : "Сохранить"}
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => handleShare("vk")}>
+              <Icon name="Share2" size={18} />
+              ВКонтакте
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => handleShare("telegram")}>
+              <Icon name="Send" size={18} />
+              Telegram
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => handleShare("whatsapp")}>
+              <Icon name="MessageCircle" size={18} />
+              WhatsApp
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => handleShare("twitter")}>
+              <Icon name="Twitter" size={18} />
+              Twitter
+            </Button>
+          </div>
+        </div>
+        
+        <div className="border-t border-border pt-12 mb-12">
+          <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+            <Icon name="MessageSquare" size={32} className="text-primary" />
+            Комментарии ({comments.length})
+          </h2>
+          
+          <div className="mb-8">
+            <Textarea
+              placeholder="Написать комментарий..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="mb-3 min-h-24"
+            />
+            <Button 
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Опубликовать комментарий
+            </Button>
+          </div>
+          
+          <div className="space-y-6">
+            {comments.map((comment) => (
+              <Card key={comment.id} className="p-6">
+                <div className="flex gap-4">
+                  <Avatar className="w-12 h-12 bg-primary">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                      {comment.author.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-semibold text-foreground">{comment.author}</span>
+                      <span className="text-sm text-muted-foreground">{comment.date}</span>
+                    </div>
+                    <p className="text-foreground mb-3">{comment.text}</p>
+                    <div className="flex items-center gap-4">
+                      <Button variant="ghost" size="sm" className="gap-2 h-8">
+                        <Icon name="ThumbsUp" size={16} />
+                        {comment.likes}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="gap-2 h-8">
+                        <Icon name="MessageCircle" size={16} />
+                        Ответить
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {relatedArticles.length > 0 && (
