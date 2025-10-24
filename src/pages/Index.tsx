@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,9 +75,27 @@ const newsData: NewsArticle[] = [
 
 const categories = ["Все", "Технологии", "Политика", "Экономика", "Спорт", "Культура"];
 
+const breakingNews = [
+  "СРОЧНО: Новый прорыв в квантовых вычислениях",
+  "Мировые лидеры подписали климатическое соглашение",
+  "Российская команда установила новый рекорд",
+  "Биржевые индексы достигли исторических максимумов"
+];
+
 const Index = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Все");
+  const [currentBreakingNews, setCurrentBreakingNews] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBreakingNews((prev) => (prev + 1) % breakingNews.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const popularNews = newsData.slice(0, 4);
 
   const filteredNews = newsData.filter((article) => {
     const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,6 +106,27 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="bg-primary text-primary-foreground py-2 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="bg-white/20 text-white font-bold px-3 py-1 uppercase text-xs">
+              Срочно
+            </Badge>
+            <div className="flex-1 relative h-6 overflow-hidden">
+              <div 
+                className="absolute transition-transform duration-500 ease-in-out whitespace-nowrap"
+                style={{ transform: `translateY(-${currentBreakingNews * 24}px)` }}
+              >
+                {breakingNews.map((news, index) => (
+                  <div key={index} className="h-6 flex items-center font-medium text-sm">
+                    {news}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <header className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -117,6 +157,45 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
+              <Icon name="TrendingUp" size={32} className="text-primary" />
+              Популярное
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {popularNews.map((article) => (
+              <Card 
+                key={article.id}
+                className="overflow-hidden hover-scale cursor-pointer group border-border"
+                onClick={() => navigate(`/article?id=${article.id}`)}
+              >
+                <div className="relative overflow-hidden h-32">
+                  <img 
+                    src={article.image} 
+                    alt={article.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs">
+                    {article.category}
+                  </Badge>
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                    {article.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                    <Icon name="Eye" size={14} />
+                    <span>{Math.floor(Math.random() * 5000 + 1000)} просмотров</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2 mb-8">
           {categories.map((category) => (
             <Button
@@ -143,6 +222,7 @@ const Index = () => {
                 key={article.id} 
                 className="overflow-hidden hover-scale cursor-pointer border-border group"
                 style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => navigate(`/article?id=${article.id}`)}
               >
                 <div className="relative overflow-hidden h-48">
                   <img 
@@ -173,7 +253,13 @@ const Index = () => {
                       <span>{article.readTime}</span>
                     </div>
                   </div>
-                  <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
+                  <Button 
+                    className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/article?id=${article.id}`);
+                    }}
+                  >
                     Читать далее
                     <Icon name="ArrowRight" size={18} className="ml-2" />
                   </Button>
